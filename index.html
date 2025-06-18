@@ -44,14 +44,17 @@
         </select>
       </div>
 
-      <button type="button" onclick="genererPDF()" class="bg-blue-600 text-white px-4 py-2 rounded">Télécharger le Résultat en PDF</button>
+      <button type="button" onclick="afficherResultat()" class="bg-green-600 text-white px-4 py-2 rounded">Afficher le Résultat</button>
     </form>
 
     <div id="resultat" class="mt-8"></div>
+    <div id="boutonPDF" class="mt-4 hidden">
+      <button onclick="genererPDF()" class="bg-blue-600 text-white px-4 py-2 rounded">📄 Télécharger le Résultat en PDF</button>
+    </div>
   </div>
 
   <script>
-    async function genererPDF() {
+    function afficherResultat() {
       const form = document.getElementById("questionnaire");
       const reponses = {
         logement: form.logement.value,
@@ -60,47 +63,54 @@
         urgence: form.urgence.value
       };
 
-      let recap = "Résumé des Besoins:\n\n";
-      let todo = "Todolist:\n\n";
+      let recapHTML = "<h2 class='text-xl font-bold mb-4'>Résumé des Besoins</h2><ul class='list-disc pl-5'>";
+      let todoHTML = "<h2 class='text-xl font-bold mt-6 mb-4'>📝 Todolist</h2><ul class='list-disc pl-5'>";
 
       if (reponses.logement === "oui") {
-        recap += "- Aménagement logement : besoin détecté.\n";
-        recap += "  > Aides possibles : Crédit d’impôt, APA, aides des caisses de retraite.\n  > Démarches : faire évaluer les besoins par un ergothérapeute ou via un service d’évaluation.\n  > Délais : entre 1 et 3 mois selon les démarches.\n  > Infos : https://www.pour-les-personnes-agees.gouv.fr/...amenager-son-logement...\n\n";
-        todo += "☐ Contacter un ergothérapeute\n☐ Demander une évaluation APA\n☐ Se renseigner auprès de la caisse de retraite\n\n";
+        recapHTML += "<li><strong class='text-blue-900'>Aménagement du logement</strong> : Crédit d’impôt, APA, caisses de retraite. Délai : 1 à 3 mois.</li>";
+        todoHTML += "<li>🛠️ Contacter un ergothérapeute</li><li>📄 Demander une évaluation APA</li><li>🏛️ Se renseigner auprès de la caisse de retraite</li>";
       }
 
       if (reponses.aideAidant === "oui") {
-        recap += "- Aide pour l’aidant : possible.\n";
-        recap += "  > Aides : Congé proche aidant, AJPA, CAF.\n  > Démarches : Contact CAF ou service social.\n  > Délais : 1 à 2 mois.\n  > Infos : https://www.pour-les-personnes-agees.gouv.fr/...soutien-financier...\n\n";
-        todo += "☐ Vérifier les conditions du congé proche aidant\n☐ Contacter la CAF\n☐ Consulter un assistant social\n\n";
+        recapHTML += "<li><strong class='text-blue-900'>Aide pour l’aidant</strong> : Congé proche aidant, AJPA, CAF. Délai : 1 à 2 mois.</li>";
+        todoHTML += "<li>📌 Vérifier les conditions du congé</li><li>📞 Contacter la CAF</li><li>👥 Consulter un assistant social</li>";
       }
 
       if (reponses.aideDomicile === "oui") {
-        recap += "- Aide à domicile : nécessaire.\n";
-        recap += "  > Aides : APA, aide ménagère via caisse de retraite.\n  > Démarches : demande via CCAS ou conseil départemental.\n  > Délais : 2 semaines à 2 mois.\n  > Infos : https://www.pour-les-personnes-agees.gouv.fr/...aide-a-domicile...\n\n";
-        todo += "☐ Faire une demande APA\n☐ Contacter le CCAS\n☐ Évaluer les besoins avec un professionnel\n\n";
+        recapHTML += "<li><strong class='text-blue-900'>Aide à domicile</strong> : APA, aide via caisse de retraite. Délai : 2 semaines à 2 mois.</li>";
+        todoHTML += "<li>📝 Faire une demande APA</li><li>🏢 Contacter le CCAS</li><li>👩‍⚕️ Évaluer les besoins</li>";
       }
 
       if (reponses.urgence === "oui") {
-        recap += "- Urgence : situation prioritaire.\n";
-        recap += "  > Aides : plateformes d’écoute, SAMU social, urgence médico-sociale.\n  > Démarches : appeler le 3977 ou numéro d’urgence local.\n  > Délais : immédiats à quelques jours.\n  > Infos : https://www.pour-les-personnes-agees.gouv.fr/...en-cas-d-urgence...\n\n";
-        todo += "☐ Contacter le 3977\n☐ Identifier structures d’urgence locales\n☐ Demander un soutien psychologique si besoin\n\n";
+        recapHTML += "<li><strong class='text-blue-900'>Urgence</strong> : plateformes d’écoute, 3977, structures locales. Délai : immédiat à quelques jours.</li>";
+        todoHTML += "<li>📞 Contacter le 3977</li><li>🗺️ Identifier structures locales</li><li>🧠 Demander un soutien psychologique</li>";
       }
 
+      recapHTML += "</ul>";
+      todoHTML += "</ul>";
+
+      document.getElementById("resultat").innerHTML = recapHTML + todoHTML;
+      document.getElementById("boutonPDF").classList.remove("hidden");
+    }
+
+    function genererPDF() {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+      const doc = new jsPDF({ format: "a5", orientation: "portrait" });
+      const resultat = document.getElementById("resultat").innerText.split("\n");
 
-      doc.setFontSize(14);
-      doc.text("Questionnaire Aidants - Résultats", 10, 10);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("Questionnaire Aidants - Résultats", 10, 20);
 
-      const lignes = (recap + todo).split("\n");
-      let y = 20;
-      lignes.forEach(ligne => {
-        if (y > 280) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12);
+      let y = 30;
+      resultat.forEach(line => {
+        if (y > 200) {
           doc.addPage();
-          y = 10;
+          y = 20;
         }
-        doc.text(ligne, 10, y);
+        doc.text(line, 10, y);
         y += 7;
       });
 
