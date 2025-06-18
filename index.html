@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Questionnaire pour Aidants</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans">
+  <div class="max-w-3xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6 text-center">Questionnaire pour les Aidants de Séniors</h1>
+
+    <form id="questionnaire" class="space-y-6">
+      <div>
+        <label class="block font-semibold mb-2">1. Le senior a-t-il besoin d'un aménagement pour son logement ?</label>
+        <select name="logement" class="w-full p-2 border rounded">
+          <option value="non">Non</option>
+          <option value="oui">Oui</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-2">2. L’aidant peut-il bénéficier d’une aide financière ?</label>
+        <select name="aideAidant" class="w-full p-2 border rounded">
+          <option value="non">Non</option>
+          <option value="oui">Oui</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-2">3. Le senior a-t-il besoin d’une aide à domicile ?</label>
+        <select name="aideDomicile" class="w-full p-2 border rounded">
+          <option value="non">Non</option>
+          <option value="oui">Oui</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-2">4. Le senior est-il dans une situation d'urgence ?</label>
+        <select name="urgence" class="w-full p-2 border rounded">
+          <option value="non">Non</option>
+          <option value="oui">Oui</option>
+        </select>
+      </div>
+
+      <button type="button" onclick="genererPDF()" class="bg-blue-600 text-white px-4 py-2 rounded">Télécharger le Résultat en PDF</button>
+    </form>
+
+    <div id="resultat" class="mt-8"></div>
+  </div>
+
+  <script>
+    async function genererPDF() {
+      const form = document.getElementById("questionnaire");
+      const reponses = {
+        logement: form.logement.value,
+        aideAidant: form.aideAidant.value,
+        aideDomicile: form.aideDomicile.value,
+        urgence: form.urgence.value
+      };
+
+      let recap = "Résumé des Besoins:\n\n";
+      let todo = "Todolist:\n\n";
+
+      if (reponses.logement === "oui") {
+        recap += "- Aménagement logement : besoin détecté.\n";
+        recap += "  > Aides possibles : Crédit d’impôt, APA, aides des caisses de retraite.\n  > Démarches : faire évaluer les besoins par un ergothérapeute ou via un service d’évaluation.\n  > Délais : entre 1 et 3 mois selon les démarches.\n  > Infos : https://www.pour-les-personnes-agees.gouv.fr/...amenager-son-logement...\n\n";
+        todo += "☐ Contacter un ergothérapeute\n☐ Demander une évaluation APA\n☐ Se renseigner auprès de la caisse de retraite\n\n";
+      }
+
+      if (reponses.aideAidant === "oui") {
+        recap += "- Aide pour l’aidant : possible.\n";
+        recap += "  > Aides : Congé proche aidant, AJPA, CAF.\n  > Démarches : Contact CAF ou service social.\n  > Délais : 1 à 2 mois.\n  > Infos : https://www.pour-les-personnes-agees.gouv.fr/...soutien-financier...\n\n";
+        todo += "☐ Vérifier les conditions du congé proche aidant\n☐ Contacter la CAF\n☐ Consulter un assistant social\n\n";
+      }
+
+      if (reponses.aideDomicile === "oui") {
+        recap += "- Aide à domicile : nécessaire.\n";
+        recap += "  > Aides : APA, aide ménagère via caisse de retraite.\n  > Démarches : demande via CCAS ou conseil départemental.\n  > Délais : 2 semaines à 2 mois.\n  > Infos : https://www.pour-les-personnes-agees.gouv.fr/...aide-a-domicile...\n\n";
+        todo += "☐ Faire une demande APA\n☐ Contacter le CCAS\n☐ Évaluer les besoins avec un professionnel\n\n";
+      }
+
+      if (reponses.urgence === "oui") {
+        recap += "- Urgence : situation prioritaire.\n";
+        recap += "  > Aides : plateformes d’écoute, SAMU social, urgence médico-sociale.\n  > Démarches : appeler le 3977 ou numéro d’urgence local.\n  > Délais : immédiats à quelques jours.\n  > Infos : https://www.pour-les-personnes-agees.gouv.fr/...en-cas-d-urgence...\n\n";
+        todo += "☐ Contacter le 3977\n☐ Identifier structures d’urgence locales\n☐ Demander un soutien psychologique si besoin\n\n";
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(14);
+      doc.text("Questionnaire Aidants - Résultats", 10, 10);
+
+      const lignes = (recap + todo).split("\n");
+      let y = 20;
+      lignes.forEach(ligne => {
+        if (y > 280) {
+          doc.addPage();
+          y = 10;
+        }
+        doc.text(ligne, 10, y);
+        y += 7;
+      });
+
+      doc.save("resultat_aidant.pdf");
+    }
+  </script>
+</body>
+</html>
